@@ -65,12 +65,13 @@ async function main(): Promise<void> {
       connection: { url: process.env.REDIS_URL || 'redis://localhost:6379' },
       concurrency: 5,
       lockDuration: 30_000,
-      stalledInterval: 15_000,
+      stalledInterval: 30_000,
     }
   )
 
   worker.on('completed', (job) => console.log(`[worker] Job ${job.id} completed`))
   worker.on('failed', (job, err) => console.error(`[worker] Job ${job?.id} failed:`, err))
+  worker.on('error', (err) => console.error('[worker] Worker error:', err))
   console.log('[worker] Listening for jobs...')
 }
 
