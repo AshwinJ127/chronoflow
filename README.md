@@ -4,8 +4,6 @@ A distributed workflow orchestration engine built from scratch — think a minim
 
 **Live demo:** https://chronoflow.fly.dev
 
-![Chronoflow UI](https://raw.githubusercontent.com/AshwinJ127/chronoflow/main/docs/screenshot.png)
-
 ---
 
 ## What it does
