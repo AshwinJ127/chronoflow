@@ -47,18 +47,22 @@ export class WorkflowEngine {
         inputs[step.id] = output
       } catch (e: unknown) {
         const message = e instanceof Error ? e.message : String(e)
-        await db.query(
-          `INSERT INTO events (run_id, step_id, event_type, payload) VALUES ($1, $2, 'STEP_FAILED', $3)`,
-          [this.runId, step.id, JSON.stringify({ error: message })]
-        )
-        await db.query(
-          `INSERT INTO events (run_id, step_id, event_type, payload) VALUES ($1, NULL, 'RUN_FAILED', $2)`,
-          [this.runId, JSON.stringify({ failed_step_id: step.id })]
-        )
-        await db.query(
-          `UPDATE runs SET status='failed', updated_at=now() WHERE id=$1`,
-          [this.runId]
-        )
+        try {
+          await db.query(
+            `INSERT INTO events (run_id, step_id, event_type, payload) VALUES ($1, $2, 'STEP_FAILED', $3)`,
+            [this.runId, step.id, JSON.stringify({ error: message })]
+          )
+          await db.query(
+            `INSERT INTO events (run_id, step_id, event_type, payload) VALUES ($1, NULL, 'RUN_FAILED', $2)`,
+            [this.runId, JSON.stringify({ failed_step_id: step.id })]
+          )
+          await db.query(
+            `UPDATE runs SET status='failed', updated_at=now() WHERE id=$1`,
+            [this.runId]
+          )
+        } catch (dbErr) {
+          console.error(`[WorkflowEngine] Failed to write failure events for run ${this.runId}:`, dbErr)
+        }
         return
       }
     }
