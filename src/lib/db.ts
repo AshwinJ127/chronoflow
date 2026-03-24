@@ -9,4 +9,6 @@ if (!globalForPg.pgPool) {
   })
 }
 
-export default globalForPg.pgPool
+const db = globalForPg.pgPool as Pool
+
+export default db
