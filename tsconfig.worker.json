@@ -9,6 +9,6 @@
     "rootDir": ".",
     "skipLibCheck": true
   },
-  "include": ["server.ts", "src/worker.ts", "src/lib/**/*.ts", "src/workflows/**/*.ts"],
+  "include": ["server.ts", "worker.ts", "src/lib/**/*.ts", "src/workflows/**/*.ts"],
   "exclude": ["node_modules", "src/app", "src/components", "src/store", "__tests__"]
 }
