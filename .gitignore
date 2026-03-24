@@ -6,3 +6,4 @@ dist/
 .env.local
 *.pid
 .superpowers/
+next-env.d.ts
