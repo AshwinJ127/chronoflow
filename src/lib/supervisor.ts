@@ -11,10 +11,17 @@ function spawnWorker(): void {
     env: process.env,
   })
 
+  if (!workerProcess.pid) {
+    console.error('[supervisor] Worker failed to start')
+    return
+  }
+  console.log(`[supervisor] Worker started (pid=${workerProcess.pid})`)
+
   workerProcess.on('exit', (code, signal) => {
     console.log(`[supervisor] Worker exited (code=${code} signal=${signal})`)
     workerProcess = null
-    const delay = parseInt(process.env.WORKER_RESPAWN_DELAY_MS || '1000', 10)
+    const raw = parseInt(process.env.WORKER_RESPAWN_DELAY_MS || '1000', 10)
+    const delay = isNaN(raw) ? 1000 : raw
     if (!respawning) {
       respawning = true
       setTimeout(() => {
@@ -25,16 +32,20 @@ function spawnWorker(): void {
     }
   })
 
-  console.log(`[supervisor] Worker started (pid=${workerProcess.pid})`)
 }
 
 export function startWorker(): void {
+  if (workerProcess && workerProcess.exitCode === null) {
+    console.warn('[supervisor] Worker already running')
+    return
+  }
   spawnWorker()
 }
 
 export function killWorker(): { pid: number } | null {
   if (!workerProcess || workerProcess.exitCode !== null) return null
-  const pid = workerProcess.pid!
+  const pid = workerProcess.pid
+  if (pid === undefined) return null
   workerProcess.kill('SIGKILL')
   return { pid }
 }

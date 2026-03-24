@@ -19,4 +19,7 @@ app.prepare().then(() => {
   }).listen(3000, () => {
     console.log(`> Ready on http://localhost:3000`)
   })
+}).catch((err: unknown) => {
+  console.error('[server] Failed to start:', err)
+  process.exit(1)
 })
