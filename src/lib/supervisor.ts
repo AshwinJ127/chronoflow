@@ -1,15 +1,27 @@
 import { spawn, ChildProcess } from 'child_process'
 import path from 'path'
 
-let workerProcess: ChildProcess | null = null
-let respawning = false
+// Store on globalThis so the same instance is shared between server.ts and
+// Next.js API routes (which run in a separate module context in dev mode).
+const g = globalThis as typeof globalThis & {
+  __workerProcess?: ChildProcess | null
+  __respawning?: boolean
+}
+if (g.__workerProcess === undefined) g.__workerProcess = null
+if (g.__respawning === undefined) g.__respawning = false
+
+function getWorkerProcess() { return g.__workerProcess ?? null }
+function setWorkerProcess(p: ChildProcess | null) { g.__workerProcess = p }
+function isRespawning() { return g.__respawning ?? false }
+function setRespawning(v: boolean) { g.__respawning = v }
 
 function spawnWorker(): void {
   const workerPath = path.join(process.cwd(), 'dist', 'worker.js')
-  workerProcess = spawn('node', [workerPath], {
+  const workerProcess = spawn('node', [workerPath], {
     stdio: 'inherit',
     env: process.env,
   })
+  setWorkerProcess(workerProcess)
 
   if (!workerProcess.pid) {
     console.error('[supervisor] Worker failed to start')
@@ -19,13 +31,13 @@ function spawnWorker(): void {
 
   workerProcess.on('exit', (code, signal) => {
     console.log(`[supervisor] Worker exited (code=${code} signal=${signal})`)
-    workerProcess = null
+    setWorkerProcess(null)
     const raw = parseInt(process.env.WORKER_RESPAWN_DELAY_MS || '1000', 10)
     const delay = isNaN(raw) ? 1000 : raw
-    if (!respawning) {
-      respawning = true
+    if (!isRespawning()) {
+      setRespawning(true)
       setTimeout(() => {
-        respawning = false
+        setRespawning(false)
         console.log('[supervisor] Respawning worker...')
         spawnWorker()
       }, delay)
@@ -35,7 +47,8 @@ function spawnWorker(): void {
 }
 
 export function startWorker(): void {
-  if (workerProcess && workerProcess.exitCode === null) {
+  const wp = getWorkerProcess()
+  if (wp && wp.exitCode === null) {
     console.warn('[supervisor] Worker already running')
     return
   }
@@ -43,16 +56,18 @@ export function startWorker(): void {
 }
 
 export function killWorker(): { pid: number } | null {
-  if (!workerProcess || workerProcess.exitCode !== null) return null
-  const pid = workerProcess.pid
+  const wp = getWorkerProcess()
+  if (!wp || wp.exitCode !== null) return null
+  const pid = wp.pid
   if (pid === undefined) return null
-  workerProcess.kill('SIGKILL')
+  wp.kill('SIGKILL')
   return { pid }
 }
 
 export function getWorkerStatus(): { status: 'online' | 'offline'; pid?: number } {
-  if (workerProcess && workerProcess.exitCode === null) {
-    return { status: 'online', pid: workerProcess.pid }
+  const wp = getWorkerProcess()
+  if (wp && wp.exitCode === null) {
+    return { status: 'online', pid: wp.pid }
   }
   return { status: 'offline' }
 }

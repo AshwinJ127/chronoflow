@@ -1,5 +1,4 @@
 import { createServer } from 'http'
-import { parse } from 'url'
 import next from 'next'
 import { startWorker } from './src/lib/supervisor'
 
@@ -14,8 +13,7 @@ app.prepare().then(() => {
   }
 
   createServer((req, res) => {
-    const parsedUrl = parse(req.url!, true)
-    handle(req, res, parsedUrl)
+    handle(req, res)
   }).listen(3000, () => {
     console.log(`> Ready on http://localhost:3000`)
   })
