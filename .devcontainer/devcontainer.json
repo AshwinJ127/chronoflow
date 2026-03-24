@@ -1,0 +1,19 @@
+{
+  "name": "Chronoflow",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "Chronoflow UI", "onAutoForward": "openBrowser" }
+  },
+  "postCreateCommand": "npm install && docker compose up -d && sleep 3 && psql postgres://chronoflow:chronoflow@localhost:5433/chronoflow -f db/schema.sql && npx tsc --project tsconfig.worker.json",
+  "postStartCommand": "npm run dev",
+  "remoteEnv": {
+    "DATABASE_URL": "postgres://chronoflow:chronoflow@localhost:5433/chronoflow",
+    "REDIS_URL": "redis://localhost:6379",
+    "WORKER_RESPAWN_DELAY_MS": "1000",
+    "START_WORKER": "true"
+  }
+}

@@ -2,7 +2,7 @@
 
 A distributed workflow orchestration engine built from scratch — think a minimal Temporal or Conductor. Workflows are defined in code, executed by a supervised worker process, and survive crashes by replaying an append-only PostgreSQL event log.
 
-**Live demo:** https://chronoflow.fly.dev
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/AshwinJ127/chronoflow)
 
 ---
 
